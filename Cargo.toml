@@ -1,0 +1,4 @@
+[package]
+name = "RFractalizer"
+version = "0.1.0"
+authors = ["Lucas Werkmeister <mail@lucaswerkmeister.de>"]
