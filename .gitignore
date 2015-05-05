@@ -1,3 +1,7 @@
+# Cargo stuff
+/Cargo.lock
+/target
+
 # editor files
 *~
 \#*
