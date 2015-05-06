@@ -4,6 +4,11 @@ extern crate gdk;
 use gtk::traits::*;
 use gtk::signal::Inhibit;
 
+mod complex;
+mod mandelbrot;
+
+use complex::Complex;
+
 fn main() {
     let width:i32 = 1920;
     let height:i32 = 1080;
@@ -19,9 +24,11 @@ fn main() {
         Inhibit(true)
     });
 
-    let pixbuf = gdk::widgets::Pixbuf::new(gdk::ColorSpace::RGB, /*has_alpha*/false, /*bits_per_sample*/8, width, height).unwrap();
+    let pixbuf = gdk::widgets::Pixbuf::new(gdk::ColorSpace::RGB, /*has_alpha*/true, /*bits_per_sample*/8, width, height).unwrap();
     let image = gtk::widgets::Image::new_from_pixbuf(&pixbuf).unwrap();
     window.add(&image);
+
+    mandelbrot::draw(pixbuf, 1_000, Complex { r: -1.0, i: -1.0 }, Complex { r: 1.0, i: 1.0 });
     
     window.show_all();
     gtk::main();
