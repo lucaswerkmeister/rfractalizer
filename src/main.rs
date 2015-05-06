@@ -28,7 +28,7 @@ fn main() {
     let image = gtk::widgets::Image::new_from_pixbuf(&pixbuf).unwrap();
     window.add(&image);
 
-    mandelbrot::draw(pixbuf, 1_000, Complex { r: -1.0, i: -1.0 }, Complex { r: 1.0, i: 1.0 });
+    mandelbrot::draw(pixbuf, 1_000, Complex { r: -2.25, i: -0.9140625 }, Complex { r: 1.0, i: 0.9140625 });
     
     window.show_all();
     gtk::main();
