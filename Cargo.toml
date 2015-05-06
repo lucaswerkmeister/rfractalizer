@@ -5,4 +5,8 @@ authors = ["Lucas Werkmeister <mail@lucaswerkmeister.de>"]
 
 [dependencies.gtk]
 git = "https://github.com/rust-gnome/gtk.git"
-features = ["gtk_3_12"]
+features = ["gtk_3_14"]
+
+[dependencies.gdk]
+git = "https://github.com/rust-gnome/gdk"
+features = ["gdk_3_14"]
