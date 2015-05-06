@@ -1,11 +1,13 @@
-#[derive(Debug,Copy,clone)]
+use std::ops::{Add,Mul};
+
+#[derive(Debug,Copy,Clone)]
 pub struct Complex {
-    r: f64;
-    i: f64;
+    pub r: f64,
+    pub i: f64
 }
 
 impl Complex {
-    fn magnitude(&self) -> f64 { (self.r*self.r + self.i*self.i).sqrt() }
+    pub fn mag_sqr(&self) -> f64 { self.r*self.r + self.i*self.i }
 }
 
 impl Add<Complex> for Complex {
