@@ -25,8 +25,8 @@ pub fn draw(pixbuf: gdk::widgets::Pixbuf, max_iterations: i64, neg_corner: Compl
                 i: neg_corner.i*(1.0-yf) + pos_corner.i*yf
             };
             let iterations = iterate(c, max_iterations);
-            let (r,g,b) = if iterations < 0 { (0,0,0) } else { (1,1,1) };
-            pixbuf.put_pixel(x, y, r, g, b, 1);
+            let (r,g,b) = if iterations < 0 { (0,0,0) } else { (255,255,255) };
+            pixbuf.put_pixel(x, y, r, g, b, 255);
         }
     }
 }
