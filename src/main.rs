@@ -24,7 +24,7 @@ fn main() {
         Inhibit(true)
     });
 
-    let pixbuf = gdk::widgets::Pixbuf::new(gdk::ColorSpace::RGB, /*has_alpha*/true, /*bits_per_sample*/8, width, height).unwrap();
+    let pixbuf = gdk::widgets::Pixbuf::new(gdk::ColorSpace::RGB, /*has_alpha*/false, /*bits_per_sample*/8, width, height).unwrap();
     let image = gtk::widgets::Image::new_from_pixbuf(&pixbuf).unwrap();
     window.add(&image);
 

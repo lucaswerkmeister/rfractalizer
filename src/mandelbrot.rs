@@ -16,6 +16,11 @@ fn iterate(c: Complex, max_iterations: i64) -> i64 {
 pub fn draw(pixbuf: gdk::widgets::Pixbuf, max_iterations: i64, neg_corner: Complex, pos_corner: Complex) {
     let w = pixbuf.get_width();
     let h = pixbuf.get_height();
+    let rowstride = pixbuf.get_rowstride();
+    let n_channels = pixbuf.get_n_channels();
+    let mut length = 0u32;
+    let mut pixels_ = pixbuf.get_pixels_with_length(&mut length).unwrap();
+    let pixels = pixels_.as_mut();
     for x in 0..w {
         for y in 0..h {
             let xf = x as f64 / w as f64;
@@ -26,7 +31,10 @@ pub fn draw(pixbuf: gdk::widgets::Pixbuf, max_iterations: i64, neg_corner: Compl
             };
             let iterations = iterate(c, max_iterations);
             let (r,g,b) = if iterations < 0 { (0,0,0) } else { (255,255,255) };
-            pixbuf.put_pixel(x, y, r, g, b, 255);
+            let pos = (y*rowstride + x*n_channels) as usize;
+            pixels[pos+0] = r;
+            pixels[pos+1] = g;
+            pixels[pos+2] = b;
         }
     }
 }
