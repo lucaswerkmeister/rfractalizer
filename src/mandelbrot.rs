@@ -5,7 +5,7 @@ use complex::Complex;
 fn iterate(c: Complex, max_iterations: i64) -> i64 {
     let mut z = Complex { r: 0.0, i: 0.0 };
     for i in 0..max_iterations {
-        if z.mag_sqr() < 4.0 {
+        if z.mag_sqr() >= 4.0 {
             return i;
         }
         z = z*z + c;
