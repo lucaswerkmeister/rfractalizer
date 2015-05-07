@@ -1,6 +1,9 @@
+#![feature(scoped)]
+
 extern crate gtk;
 extern crate gdk;
 
+use std::thread;
 use gtk::traits::*;
 use gtk::signal::Inhibit;
 
@@ -25,11 +28,20 @@ fn main() {
     });
 
     let pixbuf = gdk::widgets::Pixbuf::new(gdk::ColorSpace::RGB, /*has_alpha*/false, /*bits_per_sample*/8, width, height).unwrap();
+    let mut length = 0_u32;
+    let mut p = pixbuf.get_pixels_with_length(&mut length).unwrap();
+    let mut pixels = p.as_mut();
+    
     let image = gtk::widgets::Image::new_from_pixbuf(&pixbuf).unwrap();
     window.add(&image);
 
-    mandelbrot::draw(pixbuf, 1_000, Complex { r: -2.25, i: -0.9140625 }, Complex { r: 1.0, i: 0.9140625 });
-    
     window.show_all();
+
+    let scope = thread::scoped(move || {
+        mandelbrot::draw(Complex { r: -2.25, i: -0.9140625 }, Complex { r: 1.0, i: 0.9140625 }, 1_000, pixels, width, height);
+    });
+
     gtk::main();
+
+    scope.join();
 }
