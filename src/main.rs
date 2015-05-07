@@ -3,6 +3,7 @@
 extern crate gtk;
 extern crate gdk;
 
+use std::cell::Cell;
 use std::thread;
 use gtk::traits::*;
 use gtk::signal::Inhibit;
@@ -22,8 +23,9 @@ fn main() {
     window.set_title("RFractalizer");
     window.set_window_position(gtk::WindowPosition::Center);
 
+    let close = Cell::new(false);
     window.connect_delete_event(|_, _| {
-        gtk::main_quit();
+        close.set(true);
         Inhibit(true)
     });
 
@@ -41,7 +43,15 @@ fn main() {
         mandelbrot::draw(Complex { r: -2.25, i: -0.9140625 }, Complex { r: 1.0, i: 0.9140625 }, 1_000, pixels, width, height);
     });
 
-    gtk::main();
+    // manual main loop so we can refresh the image per iteration
+    loop {
+        gtk::main_iteration_do(false); // false: don’t block the loop if no events are there
+        image.set_from_pixbuf(&pixbuf); // image.queue_draw() doesn’t work for some reason
+        if close.get() {
+            break;
+        }
+        thread::sleep_ms(10);
+    }
 
     scope.join();
 }
