@@ -15,8 +15,8 @@ fn iterate(c: Complex, max_iterations: i64) -> i64 {
 
 // assumes RGB, 3 channels, rowstride = 3*width (i. e.: no alpha channel!)
 pub fn draw(neg_corner: Complex, pos_corner: Complex, max_iterations: i64, pixels: &mut [u8], width: i32, height: i32) {
-    for x in 0..width {
-        for y in 0..height {
+    for y in 0..height {
+        for x in 0..width {
             let xf = x as f64 / width as f64;
             let yf = y as f64 / height as f64;
             let c = Complex {
