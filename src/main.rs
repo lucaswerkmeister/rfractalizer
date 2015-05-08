@@ -55,7 +55,7 @@ fn main() {
         threads.push(thread::scoped(move || {
             let my_neg_corner = Complex { r: neg_corner.r, i: neg_corner.i + (pos_corner.i-neg_corner.i)*(i as f64/n_threads as f64) };
             let my_pos_corner = Complex { r: pos_corner.r, i: neg_corner.i + (pos_corner.i-neg_corner.i)*((i+1) as f64/n_threads as f64) };
-            mandelbrot::draw(my_neg_corner, my_pos_corner, 1_000, my_slice, width, height/n_threads);
+            mandelbrot::draw(my_neg_corner, my_pos_corner, 1_000, my_slice, width, height/n_threads, 2);
         }));
     }
 
