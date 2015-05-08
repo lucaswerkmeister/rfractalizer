@@ -5,6 +5,7 @@ extern crate gdk;
 
 use std::cell::Cell;
 use std::thread;
+use std::vec::Vec;
 use gtk::traits::*;
 use gtk::signal::Inhibit;
 
@@ -34,20 +35,29 @@ fn main() {
     let mut p = pixbuf.get_pixels_with_length(&mut length).unwrap();
     let mut pixels = p.as_mut();
 
-    let upper_pixels = unsafe { std::slice::from_raw_parts_mut(&mut pixels[0 as usize] as *mut u8, (width*height*3/2) as usize) };
-    let lower_pixels = unsafe { std::slice::from_raw_parts_mut(&mut pixels[(width*height*3/2) as usize] as *mut u8, (width*height*3/2) as usize) };
+    let n_threads = 8;
+    let mut slices = Vec::with_capacity(n_threads as usize);
+    for i in 0..n_threads {
+        slices.push(unsafe { std::slice::from_raw_parts_mut(&mut pixels[(i*width*height*3/n_threads) as usize] as *mut u8, (width*height*3/n_threads) as usize) });
+    }
     
     let image = gtk::widgets::Image::new_from_pixbuf(&pixbuf).unwrap();
     window.add(&image);
 
     window.show_all();
 
-    let upper_scope = thread::scoped(move || {
-        mandelbrot::draw(Complex { r: -2.25, i: 0.0 }, Complex { r: 1.0, i: 0.9140625 }, 1_000, upper_pixels, width, height/2);
-    });
-    let lower_scope = thread::scoped(move || {
-        mandelbrot::draw(Complex { r: -2.25, i: -0.9140625 }, Complex { r: 1.0, i: 0.0 }, 1_000, lower_pixels, width, height/2);
-    });
+    let neg_corner = Complex { r: -2.25, i: -0.9140625 };
+    let pos_corner = Complex { r:   1.0, i:  0.9140625 };
+
+    let mut threads = Vec::with_capacity(n_threads as usize);
+    for i in 0..n_threads {
+        let my_slice = slices.pop().unwrap();
+        threads.push(thread::scoped(move || {
+            let my_neg_corner = Complex { r: neg_corner.r, i: neg_corner.i + (pos_corner.i-neg_corner.i)*(i as f64/n_threads as f64) };
+            let my_pos_corner = Complex { r: pos_corner.r, i: neg_corner.i + (pos_corner.i-neg_corner.i)*((i+1) as f64/n_threads as f64) };
+            mandelbrot::draw(my_neg_corner, my_pos_corner, 1_000, my_slice, width, height/n_threads);
+        }));
+    }
 
     // manual main loop so we can refresh the image per iteration
     loop {
@@ -58,7 +68,4 @@ fn main() {
         }
         thread::sleep_ms(10);
     }
-
-    upper_scope.join();
-    lower_scope.join();
 }
