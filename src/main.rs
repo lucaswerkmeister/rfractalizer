@@ -16,8 +16,8 @@ mod palettes;
 use complex::Complex;
 
 fn main() {
-    let width:i32 = 1920;
-    let height:i32 = 1080;
+    let width:i32 = 1280;
+    let height:i32 = 720;
     
     gtk::init();
     
