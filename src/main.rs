@@ -33,14 +33,20 @@ fn main() {
     let mut length = 0_u32;
     let mut p = pixbuf.get_pixels_with_length(&mut length).unwrap();
     let mut pixels = p.as_mut();
+
+    let upper_pixels = unsafe { std::slice::from_raw_parts_mut(&mut pixels[0 as usize] as *mut u8, (width*height*3/2) as usize) };
+    let lower_pixels = unsafe { std::slice::from_raw_parts_mut(&mut pixels[(width*height*3/2) as usize] as *mut u8, (width*height*3/2) as usize) };
     
     let image = gtk::widgets::Image::new_from_pixbuf(&pixbuf).unwrap();
     window.add(&image);
 
     window.show_all();
 
-    let scope = thread::scoped(move || {
-        mandelbrot::draw(Complex { r: -2.25, i: -0.9140625 }, Complex { r: 1.0, i: 0.9140625 }, 1_000, pixels, width, height);
+    let upper_scope = thread::scoped(move || {
+        mandelbrot::draw(Complex { r: -2.25, i: 0.0 }, Complex { r: 1.0, i: 0.9140625 }, 1_000, upper_pixels, width, height/2);
+    });
+    let lower_scope = thread::scoped(move || {
+        mandelbrot::draw(Complex { r: -2.25, i: -0.9140625 }, Complex { r: 1.0, i: 0.0 }, 1_000, lower_pixels, width, height/2);
     });
 
     // manual main loop so we can refresh the image per iteration
@@ -53,5 +59,6 @@ fn main() {
         thread::sleep_ms(10);
     }
 
-    scope.join();
+    upper_scope.join();
+    lower_scope.join();
 }

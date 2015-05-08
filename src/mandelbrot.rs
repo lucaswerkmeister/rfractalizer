@@ -21,7 +21,7 @@ pub fn draw(neg_corner: Complex, pos_corner: Complex, max_iterations: i64, pixel
             let yf = y as f64 / height as f64;
             let c = Complex {
                 r: neg_corner.r*(1.0-xf) + pos_corner.r*xf,
-                i: neg_corner.i*(1.0-yf) + pos_corner.i*yf
+                i: neg_corner.i*yf + pos_corner.i*(1.0-yf)
             };
             let iterations = iterate(c, max_iterations);
             let (r,g,b) = if iterations < 0 { (0,0,0) } else { (255,255,255) };
