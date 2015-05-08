@@ -14,7 +14,8 @@ fn iterate(c: Complex, max_iterations: i64) -> i64 {
 }
 
 // assumes RGB, 3 channels, rowstride = 3*width (i. e.: no alpha channel!)
-pub fn draw(neg_corner: Complex, pos_corner: Complex, max_iterations: i64, pixels: &mut [u8], width: i32, height: i32, supersampling: i32) {
+pub fn draw<ColorPalette>(neg_corner: Complex, pos_corner: Complex, max_iterations: i64, pixels: &mut [u8], width: i32, height: i32, supersampling: i32, color_palette: ColorPalette)
+    where ColorPalette : Fn(i64) -> (i32,i32,i32) {
     for y in 0..height {
         for x in 0..width {
             let (mut r, mut g, mut b) = (0,0,0);
@@ -27,7 +28,7 @@ pub fn draw(neg_corner: Complex, pos_corner: Complex, max_iterations: i64, pixel
                         i: neg_corner.i*yf + pos_corner.i*(1.0-yf)
                     };
                     let iterations = iterate(c, max_iterations);
-                    let (dr,dg,db) = if iterations < 0 { (0,0,0) } else { (255,255,255) };
+                    let (dr,dg,db) = color_palette(iterations);
                     r += dr; g += dg; b += db;
                 }
             }
