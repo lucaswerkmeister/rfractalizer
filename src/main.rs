@@ -3,8 +3,9 @@
 extern crate gtk;
 extern crate gdk;
 
-use std::cell::Cell;
 use std::thread;
+use std::result::Result;
+use std::sync::mpsc::channel;
 use std::vec::Vec;
 use gtk::traits::*;
 use gtk::signal::Inhibit;
@@ -25,9 +26,9 @@ fn main() {
     window.set_title("RFractalizer");
     window.set_window_position(gtk::WindowPosition::Center);
 
-    let close = Cell::new(false);
-    window.connect_delete_event(|_, _| {
-        close.set(true);
+    let (close_tx,close_rx) = channel::<bool>();
+    window.connect_delete_event(move |_, _| {
+        close_tx.send(true).unwrap();
         Inhibit(true)
     });
 
@@ -64,7 +65,7 @@ fn main() {
     loop {
         gtk::main_iteration_do(false); // false: don’t block the loop if no events are there
         image.set_from_pixbuf(&pixbuf); // image.queue_draw() doesn’t work for some reason
-        if close.get() {
+        if let Result::Ok(true) = close_rx.try_recv() {
             break;
         }
         thread::sleep_ms(10);
