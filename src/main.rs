@@ -32,10 +32,8 @@ fn main() {
         Inhibit(true)
     });
 
-    let pixbuf = gdk::widgets::Pixbuf::new(gdk::ColorSpace::RGB, /*has_alpha*/false, /*bits_per_sample*/8, width, height).unwrap();
-    let mut length = 0_u32;
-    let mut p = pixbuf.get_pixels_with_length(&mut length).unwrap();
-    let mut pixels = p.as_mut();
+    let pixbuf = unsafe { gdk::pixbuf::Pixbuf::new(gdk::ColorSpace::RGB, /*has_alpha*/false, /*bits_per_sample*/8, width, height).unwrap() };
+    let mut pixels = unsafe { pixbuf.get_pixels() };
 
     let n_threads = 8;
     let mut slices = Vec::with_capacity(n_threads as usize);
