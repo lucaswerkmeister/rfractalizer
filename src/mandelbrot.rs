@@ -1,6 +1,7 @@
 extern crate gdk;
 
 use complex::Complex;
+use std::sync::mpsc::Receiver;
 
 fn iterate(c: Complex, max_iterations: i64) -> i64 {
     let mut z = Complex { r: 0.0, i: 0.0 };
@@ -14,7 +15,7 @@ fn iterate(c: Complex, max_iterations: i64) -> i64 {
 }
 
 // assumes RGB, 3 channels, rowstride = 3*width (i. e.: no alpha channel!)
-pub fn draw<ColorPalette>(neg_corner: Complex, pos_corner: Complex, max_iterations: i64, pixels: &mut [u8], width: i32, height: i32, supersampling: i32, color_palette: ColorPalette)
+pub fn draw<ColorPalette>(neg_corner: Complex, pos_corner: Complex, max_iterations: i64, pixels: &mut [u8], width: i32, height: i32, supersampling: i32, color_palette: ColorPalette, cancel_rx: Receiver<bool>)
     where ColorPalette : Fn(i64) -> (i32,i32,i32) {
     for y in 0..height {
         for x in 0..width {
@@ -37,6 +38,9 @@ pub fn draw<ColorPalette>(neg_corner: Complex, pos_corner: Complex, max_iteratio
             pixels[pos+0] = r as u8;
             pixels[pos+1] = g as u8;
             pixels[pos+2] = b as u8;
+            if let Result::Ok(true) = cancel_rx.try_recv() {
+                return;
+            }
         }
     }
 }

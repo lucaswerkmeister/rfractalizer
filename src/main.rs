@@ -50,12 +50,15 @@ fn main() {
     let pos_corner = Complex { r:   1.0, i:  0.9140625 };
 
     let mut threads = Vec::with_capacity(n_threads as usize);
+    let mut cancels = Vec::with_capacity(n_threads as usize);
     for i in 0..n_threads {
         let my_slice = slices.pop().unwrap();
+        let (cancel_tx,cancel_rx) = channel::<bool>();
+        cancels.push(cancel_tx);
         threads.push(thread::scoped(move || {
             let my_neg_corner = Complex { r: neg_corner.r, i: neg_corner.i + (pos_corner.i-neg_corner.i)*(i as f64/n_threads as f64) };
             let my_pos_corner = Complex { r: pos_corner.r, i: neg_corner.i + (pos_corner.i-neg_corner.i)*((i+1) as f64/n_threads as f64) };
-            mandelbrot::draw(my_neg_corner, my_pos_corner, 1_000, my_slice, width, height/n_threads, 2, palettes::color_wheel);
+            mandelbrot::draw(my_neg_corner, my_pos_corner, 1_000, my_slice, width, height/n_threads, 2, palettes::color_wheel, cancel_rx);
         }));
     }
 
@@ -67,5 +70,8 @@ fn main() {
             break;
         }
         thread::sleep_ms(10);
+    }
+    for cancel_tx in cancels {
+        cancel_tx.send(true); // warning: .unwrap() will panic if the receiver was destroyed (calculation done)
     }
 }
