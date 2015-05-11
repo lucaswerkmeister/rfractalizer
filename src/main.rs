@@ -109,18 +109,17 @@ fn main() {
         }
         if let Result::Ok(new_point2) = point2_rx.try_recv() {
             point2 = new_point2;
-            let min_x = point1.0.min(point2.0);
-            let max_x = point1.0.max(point2.0);
-            let min_y = point1.1.min(point2.1);
-            let max_y = point1.1.max(point2.1);
-            neg_corner = Complex {
+            let (min_x,min_y,max_x,max_y) = keep_aspect_ratio(width, height, point1, point2);
+            let new_neg_corner = Complex {
                 r: neg_corner.r * (1.0 - (min_x / width as f64)) + pos_corner.r * (min_x / width as f64),
                 i: neg_corner.i * (max_y / height as f64) + pos_corner.i * (1.0 - (max_y / height as f64))
             };
-            pos_corner = Complex {
+            let new_pos_corner = Complex {
                 r: neg_corner.r * (1.0 - (max_x / width as f64)) + pos_corner.r * (max_x / width as f64),
                 i: neg_corner.i * (min_y / height as f64) + pos_corner.i * (1.0 - (min_y / height as f64))
             };
+            neg_corner = new_neg_corner;
+            pos_corner = new_pos_corner;
             for cancel_tx in &cancels {
                 cancel_tx.send(true).unwrap();
             }
@@ -135,5 +134,24 @@ fn main() {
     }
     for quit_tx in quits {
         quit_tx.send(true).unwrap();
+    }
+}
+
+/// Given a rectangular area and the coordinates of two corners of a smaller rectangular area within it,
+/// returns two corners of a rectangular area with the same upper left corner and the same width or height
+/// as the other rectangular area, and the same aspect ratio as the full area.
+fn keep_aspect_ratio(width: i32, height: i32, (x1,y1): (f64,f64), (x2,y2): (f64,f64)) -> (f64,f64,f64,f64) {
+    let min_x = x1.min(x2);
+    let max_x = x1.max(x2);
+    let min_y = y1.min(y2);
+    let max_y = y1.max(y2);
+    let dx = max_x - min_x;
+    let dy = max_y - min_y;
+    let x_ratio = dx / width as f64;
+    let y_ratio = dy / height as f64;
+    if x_ratio > y_ratio {
+        (min_x, min_y, min_x + y_ratio * width as f64, min_y + dy)
+    } else {
+        (min_x, min_y, min_x + dx, min_y + x_ratio * height as f64)
     }
 }
