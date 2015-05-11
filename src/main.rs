@@ -40,11 +40,17 @@ fn main() {
     for i in 0..n_threads {
         slices.push(unsafe { std::slice::from_raw_parts_mut(&mut pixels[(i*width*height*3/n_threads) as usize] as *mut u8, (width*height*3/n_threads) as usize) });
     }
-    
+
+    let event_box = gtk::widgets::EventBox::new().unwrap();
+    let main_overlay = gtk::widgets::Overlay::new().unwrap();
     let image = gtk::widgets::Image::new_from_pixbuf(&pixbuf).unwrap();
-    let image_events = gtk::widgets::EventBox::new().unwrap(); // GtkImage receives no events, needs to be wrapped
-    image_events.add(&image);
-    window.add(&image_events);
+    main_overlay.add(&image);
+    event_box.add(&main_overlay);
+    window.add(&event_box);
+
+    let frame = gtk::widgets::Frame::new(None).unwrap();
+    frame.set_visible(false);
+    main_overlay.add_overlay(&frame);
 
     window.show_all();
 
@@ -83,16 +89,22 @@ fn main() {
 
     let (point1_tx,point1_rx) = channel::<(f64,f64)>();
     let (point2_tx,point2_rx) = channel::<(f64,f64)>();
-    image_events.connect_button_press_event(move |_, button| {
+    let (pointm_tx,pointm_rx) = channel::<(f64,f64)>();
+    event_box.connect_button_press_event(move |_, button| {
         point1_tx.send((button.x,button.y)).unwrap();
         Inhibit(true)
     });
-    image_events.connect_button_release_event(move |_, button| {
+    event_box.connect_button_release_event(move |_, button| {
         point2_tx.send((button.x,button.y)).unwrap();
         Inhibit(true)
     });
-    let mut point1 = (0.0,0.0);
-    let mut point2 = (0.0,0.0);
+    event_box.connect_motion_notify_event(move |_, motion| {
+        pointm_tx.send((motion.x,motion.y)).unwrap();
+        Inhibit(true)
+    });
+    let mut point1 = (0.0,0.0); // point on mouse down
+    let mut point2 = (0.0,0.0); // point on mouse up
+    let mut pointm = (0.0,0.0); // point on mouse move
 
     for corner_tx in &corners {
         corner_tx.send((neg_corner,pos_corner)).unwrap();
@@ -106,8 +118,20 @@ fn main() {
         }
         if let Result::Ok(new_point1) = point1_rx.try_recv() {
             point1 = new_point1;
+            frame.set_visible(true);
+            frame.set_margin_start(point1.0 as i32);
+            frame.set_margin_top(point1.1 as i32);
+            frame.set_margin_end(width - point1.0 as i32);
+            frame.set_margin_bottom(height - point1.1 as i32);
+        }
+        if let Result::Ok(new_pointm) = pointm_rx.try_recv() {
+            pointm = new_pointm;
+            let (_,_,max_x,max_y) = keep_aspect_ratio(width, height, point1, pointm);
+            frame.set_margin_end(width - max_x as i32);
+            frame.set_margin_bottom(height - max_y as i32);
         }
         if let Result::Ok(new_point2) = point2_rx.try_recv() {
+            frame.set_visible(false);
             point2 = new_point2;
             let (min_x,min_y,max_x,max_y) = keep_aspect_ratio(width, height, point1, point2);
             let new_neg_corner = Complex {
