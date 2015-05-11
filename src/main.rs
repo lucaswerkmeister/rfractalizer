@@ -80,7 +80,7 @@ fn main() {
                 if let Result::Ok((neg_corner,pos_corner)) = corner_rx.try_recv() {
                     let my_neg_corner = Complex { r: neg_corner.r, i: neg_corner.i + (pos_corner.i-neg_corner.i)*(i as f64/n_threads as f64) };
                     let my_pos_corner = Complex { r: pos_corner.r, i: neg_corner.i + (pos_corner.i-neg_corner.i)*((i+1) as f64/n_threads as f64) };
-                    mandelbrot::draw(my_neg_corner, my_pos_corner, 1_000, my_slice, width, height/n_threads, 2, palettes::color_wheel, &cancel_rx);
+                    mandelbrot::draw(my_neg_corner, my_pos_corner, 100, my_slice, width, height/n_threads, 2, palettes::color_wheel, &cancel_rx);
                 }
                 thread::sleep_ms(10);
             }
